@@ -1,47 +1,88 @@
-let store = {
-    user: { name: "Student" },
-    apod: '',
-    rovers: ['Curiosity', 'Opportunity', 'Spirit'],
-}
+
+const store = Immutable.Map({
+    rovers: Immutable.List(['Curiosity', 'Opportunity', 'Spirit']),
+    photos: Immutable.List([]),
+    show:'',
+});
 
 // add our markup to the page
 const root = document.getElementById('root')
 
 const updateStore = (store, newState) => {
-    store = Object.assign(store, newState)
-    render(root, store)
-}
+    const newStore = store.merge(newState);
+    // console.log(newStore)
+    render(root, newStore)
+};
 
 const render = async (root, state) => {
     root.innerHTML = App(state)
-}
-
+};
 
 // create content
 const App = (state) => {
-    let { rovers, apod } = state
+
+    const rovers = state.get('rovers');
 
     return `
         <header></header>
-        <main>
-            ${Greeting(store.user.name)}
-            <section>
-                <h3>Put things on the page!</h3>
-                <p>Here is an example section.</p>
-                <p>
-                    One of the most popular websites at NASA is the Astronomy Picture of the Day. In fact, this website is one of
-                    the most popular websites across all federal agencies. It has the popular appeal of a Justin Bieber video.
-                    This endpoint structures the APOD imagery and associated metadata so that it can be repurposed for other
-                    applications. In addition, if the concept_tags parameter is set to True, then keywords derived from the image
-                    explanation are returned. These keywords could be used as auto-generated hashtags for twitter or instagram feeds;
-                    but generally help with discoverability of relevant imagery.
-                </p>
-                ${ImageOfTheDay(apod)}
+        <main class="container">
+            <h1>Welcome!</h1>
+            <section class="section">
+                <div class="row">
+                    <div class="col s12">
+                    <ul class="tabs">
+                        ${tabComponent(state.get('show'), rovers.get(0))}
+                        ${tabComponent(state.get('show'), rovers.get(1))}
+                        ${tabComponent(state.get('show'), rovers.get(2))}
+                    </ul>
+                    </div>
+                    <div class="col s12">${renderContent(state.get('show'), state)}</div>
+                </div>
             </section>
         </main>
         <footer></footer>
-    `
-}
+    `;
+};
+
+// saving the rover currently showing
+const saveContent = (show) => {
+    updateStore(store, {show});
+};
+
+// render the rover content
+const renderContent = (content, state) => {
+
+    const photos = state.get('photos');
+
+    switch(content){
+        case 'Curiosity':
+            if(photos.get(0) === undefined){
+                getRoverImages(content.toLowerCase(), state)
+                return loadingComponenet();
+            }  
+            return roverContent(photos);
+
+        case 'Opportunity':
+            if(photos.get(0) === undefined){
+                getRoverImages(content.toLowerCase(), state)
+                return loadingComponenet();
+            } 
+            return roverContent(photos);
+
+        case 'Spirit':
+            if(photos.get(0) === undefined){
+                getRoverImages(content.toLowerCase(), state)
+                return loadingComponenet();
+            }
+            return roverContent(photos);
+
+        default:
+            return `
+            <div class="divider"></div>
+            <h5>Please select a rover to display information.</h5>
+            `
+    };
+};
 
 // listening for load event because page should load before any JS is called
 window.addEventListener('load', () => {
@@ -49,57 +90,61 @@ window.addEventListener('load', () => {
 })
 
 // ------------------------------------------------------  COMPONENTS
+const tabComponent = (showState, rover) => {
+    return `<li class="tab col s4">
+                <a onclick="${showState !== rover?`saveContent('${rover}')`:''}" href="#${rover}">
+                    ${rover}
+                </a>
+            </li>`;
+};
 
-// Pure function that renders conditional information -- THIS IS JUST AN EXAMPLE, you can delete it.
-const Greeting = (name) => {
-    if (name) {
-        return `
-            <h1>Welcome, ${name}!</h1>
-        `
-    }
+const loadingComponenet = () => {
+    return `<div class="divider"></div>
+            <h5>Loading...</h5>`;
+};
 
-    return `
-        <h1>Hello!</h1>
-    `
-}
-
-// Example of a pure function that renders infomation requested from the backend
-const ImageOfTheDay = (apod) => {
-
-    // If image does not already exist, or it is not from today -- request it again
-    const today = new Date()
-    const photodate = new Date(apod.date)
-    console.log(photodate.getDate(), today.getDate());
-
-    console.log(photodate.getDate() === today.getDate());
-    if (!apod || apod.date === today.getDate() ) {
-        getImageOfTheDay(store)
-    }
-
-    // check if the photo of the day is actually type video!
-    if (apod.media_type === "video") {
-        return (`
-            <p>See today's featured video <a href="${apod.url}">here</a></p>
-            <p>${apod.title}</p>
-            <p>${apod.explanation}</p>
-        `)
-    } else {
-        return (`
-            <img src="${apod.image.url}" height="350px" width="100%" />
-            <p>${apod.image.explanation}</p>
-        `)
-    }
-}
+const roverContent = (photos) => {
+    const roverInfo = photos.get(0).get('rover');
+    const jsPhotos = photos.toJS();
+    
+    return(`
+            <div class="divider"></div>
+            <div class="section">
+                <h5>${roverInfo.get('name')}</h5>
+                <p>Launch date: ${roverInfo.get('launch_date')}</p>
+                <p>Landing date: ${roverInfo.get('landing_date')}</p>
+                <p>Status: ${roverInfo.get('status')}</p>
+            </div>
+            <div class="divider"></div>
+            <div class="section">
+                <h5>Recent Photos</h5>
+                <div class="row">
+                ${jsPhotos.map((photo) => {
+                    return(
+                    `<div class="col s4">
+                        <img class="responsive-img" src="${photo.img_src}" height="100%" width="100%" />
+                    </div>`)
+                }).join('')}
+                </div>
+            </div>
+        `);
+};
 
 // ------------------------------------------------------  API CALLS
+const getRoverImages = (rover, state) => {
 
-// Example API call
-const getImageOfTheDay = (state) => {
-    let { apod } = state
-
-    fetch(`http://localhost:3000/apod`)
+    fetch(`http://localhost:3000/rovers`, {
+        method:'POST', 
+        body: JSON.stringify({rover: rover}), 
+        headers: { 
+        "Content-type": "application/json; charset=UTF-8"
+        } 
+        
+    })
         .then(res => res.json())
-        .then(apod => updateStore(store, { apod }))
-
-    return data
-}
+        .then(res => {
+            const photos = res.images;
+            console.log(res.images)
+            updateStore(state, photos);
+        })
+};
