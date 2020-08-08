@@ -1,16 +1,14 @@
 # Functional Programming with Javascript 
 
-## Student Instructions
-
 ### Big Picture
 
-This is a project for Udacity intermediate javascript nanodegree for Functional Programming with Javascript. The project is for creating a Mars rover dashboard that consumes the NASA API. The dashboard will allow the user to select which rover's information they want to view. Once they have selected a rover, they will be able to see the most recent images taken by that rover, as well as important information about the rover and its mission. 
+This is a project for Udacity intermediate javascript nanodegree to use Functional Programming with Javascript. The project is for creating a Mars rover dashboard that consumes the NASA API. The dashboard will allow the user to select which rover's information they want to view. Once they have selected a rover, they will be able to see the most recent images taken by that rover, as well as important information about the rover and its mission. 
 
 ### Getting Started
 
-We have supplied some of the foundational code for you. So follow these steps to get started:
+To get started:
 
-1. We'll start with the typical setup - clone theis repo and install the dependencies
+1. Clone theis repo and install the dependencies
 
  - [ ] For this project we are using yarn as our package manager, so to install your depencies run:
 
