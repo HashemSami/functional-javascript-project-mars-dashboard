@@ -144,7 +144,7 @@ const getRoverImages = (rover, state) => {
         .then(res => res.json())
         .then(res => {
             const photos = res.images;
-            console.log(res.images)
+            // console.log(res.images)
             updateStore(state, photos);
         })
 };
